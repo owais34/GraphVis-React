@@ -1,41 +1,47 @@
-import React,{useState} from 'react';
+import React,{useState,useEffect} from 'react';
 import './App.css';
-// import Container from 'react-bootstrap/Container'
-// import Row from 'react-bootstrap/Row'
 import  Navbar  from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav'
 import NavDropdown from 'react-bootstrap/NavDropdown'
 import Form from 'react-bootstrap/Form'
 import FormControl from 'react-bootstrap/FormControl'
 import Button from 'react-bootstrap/Button'
+import axios from 'axios'
 
-// import Canvas from '../src/components/canvas/Canvas'
+
 
 function App() {
-  const [nodes, setNodes] = useState([])
-  const [graph,setGraph]=useState([])
+  const [graph,setGraph]=useState({"edges":[],"node":[]})
   const [source,setSource]=useState(0)
   const [sink,setSink]=useState(0)
-  const [edges,setEdges]=useState([])
- 
+  
+  useEffect(() => {
+    
+    axios.get(`http://127.0.0.1:5000/`)
+    .then(response=>{
+      console.log(response.data)
+      setGraph(response.data)
+    })
+    return () => {
+      
+    }
+  }, [])
   const onAddNode =(event)=>{
     //console.log(event.clientX,event.clientY)
-    setNodes([...nodes,{x:event.clientX,y:event.clientY}])
-    setGraph([...graph,[]])
+    let x=event.clientX
+    let y=event.clientY
+    axios.get(`http://127.0.0.1:5000/addNode?x=${x}&&y=${y}`)
+    .then(response=>{
+      console.log(response.data)
+      setGraph(response.data)
+    })
   }
   const addEdge=(event)=>{
-    if(source>=0&&source<nodes.length&&sink>=0&&sink<nodes.length&&source!==sink)
-    {
-      if(graph[source].indexOf(sink)===-1)
-      {
-        let gcopy=graph
-        gcopy[source].push(sink);
-        gcopy[sink].push(source);
-        setGraph(gcopy)
-        setEdges([...edges,[source,sink]])
-      }
-    }
-    console.log(graph)
+    axios.get(`http://127.0.0.1:5000/addEdge?source=${source}&&sink=${sink}`)
+    .then(response=>{
+      console.log(response.data)
+      setGraph(response.data)
+    })
   }
   const onChangeSource=(event)=>{
     setSource(event.target.value)
@@ -73,23 +79,23 @@ function App() {
   <div className="canvas" id="canvas" onDoubleClick={onAddNode} >
     <svg  height="590px" width="100%">
       {
-        edges.map(edge=>{
+        graph['edges'].map(edge=>{
           return (
-        <line x1={nodes[edge[0]].x} 
-        y1={nodes[edge[0]].y-50} 
-        x2={nodes[edge[1]].x} 
-        y2={nodes[edge[1]].y-50} 
-        style={{stroke:'rgb(255,0,0)',strokeWidth:3}} />
+        <line x1={graph['node'][edge[0]][2]} 
+        y1={graph['node'][edge[0]][3]-55} 
+        x2={graph['node'][edge[1]][2]} 
+        y2={graph['node'][edge[1]][3]-55} 
+        style={{stroke:edge[2],strokeWidth:3}} />
           )
         })
       }
     </svg>
     {
-      nodes.map((node,index)=>{
-        let tpos=node.y-20
-        let lpos=node.x-20
-      return (<button className="buton" 
-      style={{top:(tpos),left:(lpos),position:'absolute'}}
+      graph['node'].map((node,index)=>{
+        let tpos=node[3]-20
+        let lpos=node[2]-20
+      return (<button className="buton " 
+      style={{top:(tpos),left:(lpos),position:'absolute',background:node[1]}}
       key={index}>
         {index}
         </button>)
